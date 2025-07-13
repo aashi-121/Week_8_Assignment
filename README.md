@@ -1,31 +1,36 @@
-Assignment week _8
-
 # NYC Yellow Taxi Data Analysis using PySpark
 
-
 """
-Objective:
-Load NYC Yellow Taxi Trip Data into Azure Data Lake / Blob Storage / Databricks, extract it into a PySpark DataFrame.
-Perform the following queries using PySpark:
+## 📌 Objective:
+Load NYC Yellow Taxi Trip Data into Azure Data Lake / Blob Storage / Databricks, extract it into a PySpark DataFrame. Perform the following queries using PySpark:
 
-Query 1: Add a column named as "Revenue" into the dataframe which is the sum of the below columns:
-- fare_amount
-- extra
-- mta_tax
-- improvement_surcharge
-- tip_amount
-- tolls_amount
-- total_amount
+### 🔍 Questions:
+**Query 1**: Add a column named as **"Revenue"** into the dataframe which is the sum of the below columns:  
+• fare_amount  
+• extra  
+• mta_tax  
+• improvement_surcharge  
+• tip_amount  
+• tolls_amount  
+• total_amount
 
-Query 2: Increasing count of total passengers in New York City by area.
-Query 3: Real-time average fare/total earning amount earned by 2 vendors.
-Query 4: Moving count of payments made by each payment mode.
-Query 5: Highest two gaining vendors on a particular date with number of passengers and total distance.
-Query 6: Most number of passengers between a route of two locations.
-Query 7: Top pickup locations with most passengers in last 5/10 seconds (simulated).
+**Query 2**: Increasing count of total passengers in New York City by area.
+
+**Query 3**: Real-time average fare / total earning amount earned by 2 vendors.
+
+**Query 4**: Moving count of payments made by each payment mode.
+
+**Query 5**: Highest two gaining vendors on a particular date with number of passengers and total distance.
+
+**Query 6**: Most number of passengers between a route of two locations.
+
+**Query 7**: Top pickup locations with most passengers in last 5/10 seconds (simulated).
 """
 
-# Step 1: Setup & Data Load
+# -----------------------------------------
+# Step 1: ⚙️ Setup & Data Load
+# -----------------------------------------
+
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
@@ -33,7 +38,6 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # Load the dataset from parquet file in DBFS or mounted ADLS/Blob
-# Example DBFS path: /mnt/nyc-taxi/yellow_tripdata_2018-01.parquet
 df = spark.read.option("header", "true") \
     .option("inferSchema", "true") \
     .parquet("/mnt/nyc-taxi/yellow_tripdata_2018-01.parquet")
@@ -41,10 +45,11 @@ df = spark.read.option("header", "true") \
 df.printSchema()
 df.show(5)
 
-# Step 2: Queries
+# -----------------------------------------
+# Step 2: 🧮 Queries
+# -----------------------------------------
 
-# Query 1: Add a Revenue Column
-# Calculate Revenue as the sum of fare_amount, extra, mta_tax, improvement_surcharge, tip_amount, tolls_amount, total_amount
+# ✅ Query 1: Add a Revenue Column
 from pyspark.sql.functions import col
 
 df = df.withColumn("Revenue",
@@ -54,8 +59,7 @@ df = df.withColumn("Revenue",
 )
 df.select("Revenue").show(5)
 
-# Query 2: Increasing count of total passengers in NYC by area
-# Area is approximated using pickup longitude and latitude rounded to 2 decimals
+# ✅ Query 2: Total Passengers by Pickup Area (Increasing Count)
 from pyspark.sql.functions import round
 
 df_area = df.withColumn("pickup_area", round(col("pickup_longitude"), 2).cast("string") + "," + round(col("pickup_latitude"), 2).cast("string"))
@@ -64,7 +68,7 @@ passenger_by_area = df_area.groupBy("pickup_area").sum("passenger_count") \
     .orderBy("total_passengers", ascending=False)
 passenger_by_area.show(10)
 
-# Query 3: Real-time Average fare/total earning by 2 vendors
+# ✅ Query 3: Average Fare / Total Earnings by Vendor
 from pyspark.sql.functions import avg
 
 vendor_avg = df.groupBy("VendorID").agg(
@@ -73,7 +77,7 @@ vendor_avg = df.groupBy("VendorID").agg(
 )
 vendor_avg.show()
 
-# Query 4: Moving count of payments by payment mode
+# ✅ Query 4: Moving Count of Payments by Payment Mode
 from pyspark.sql.window import Window
 from pyspark.sql.functions import count
 
@@ -83,7 +87,7 @@ windowSpec = Window.partitionBy("payment_type").orderBy("tpep_pickup_datetime") 
 df = df.withColumn("moving_payment_count", count("payment_type").over(windowSpec))
 df.select("payment_type", "tpep_pickup_datetime", "moving_payment_count").show(10)
 
-# Query 5: Top 2 vendors by revenue on a particular date with passenger count & distance
+# ✅ Query 5: Top 2 Earning Vendors on a Specific Date
 from pyspark.sql.functions import to_date, sum
 
 df = df.withColumn("trip_date", to_date("tpep_pickup_datetime"))
@@ -95,7 +99,7 @@ summary = df.groupBy("VendorID", "trip_date").agg(
 
 summary.orderBy("total_earning", ascending=False).show(2)
 
-# Query 6: Most passengers between a route of two locations
+# ✅ Query 6: Most Passengers Between Two Locations (Route)
 from pyspark.sql.functions import concat_ws
 
 df = df.withColumn("route", concat_ws("->", col("PULocationID"), col("DOLocationID")))
@@ -104,7 +108,7 @@ most_passengers = df.groupBy("route").sum("passenger_count") \
     .orderBy("total_passengers", ascending=False)
 most_passengers.show(1)
 
-# Query 7: Top pickup locations with most passengers in last 5/10 seconds
+# ✅ Query 7: Top Pickup Locations in Last 5/10 Seconds
 from pyspark.sql.functions import unix_timestamp, current_timestamp
 
 df = df.withColumn("pickup_unix", unix_timestamp("tpep_pickup_datetime"))

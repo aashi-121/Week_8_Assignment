@@ -1,7 +1,29 @@
-# Week_8_Assignment
-Assignment:NYC Yellow Taxi Data Analysis using PySpark
+Assignment week _8
 
 # NYC Yellow Taxi Data Analysis using PySpark
+
+
+"""
+Objective:
+Load NYC Yellow Taxi Trip Data into Azure Data Lake / Blob Storage / Databricks, extract it into a PySpark DataFrame.
+Perform the following queries using PySpark:
+
+Query 1: Add a column named as "Revenue" into the dataframe which is the sum of the below columns:
+- fare_amount
+- extra
+- mta_tax
+- improvement_surcharge
+- tip_amount
+- tolls_amount
+- total_amount
+
+Query 2: Increasing count of total passengers in New York City by area.
+Query 3: Real-time average fare/total earning amount earned by 2 vendors.
+Query 4: Moving count of payments made by each payment mode.
+Query 5: Highest two gaining vendors on a particular date with number of passengers and total distance.
+Query 6: Most number of passengers between a route of two locations.
+Query 7: Top pickup locations with most passengers in last 5/10 seconds (simulated).
+"""
 
 # Step 1: Setup & Data Load
 from pyspark.sql import SparkSession
@@ -22,6 +44,7 @@ df.show(5)
 # Step 2: Queries
 
 # Query 1: Add a Revenue Column
+# Calculate Revenue as the sum of fare_amount, extra, mta_tax, improvement_surcharge, tip_amount, tolls_amount, total_amount
 from pyspark.sql.functions import col
 
 df = df.withColumn("Revenue",
@@ -32,6 +55,7 @@ df = df.withColumn("Revenue",
 df.select("Revenue").show(5)
 
 # Query 2: Increasing count of total passengers in NYC by area
+# Area is approximated using pickup longitude and latitude rounded to 2 decimals
 from pyspark.sql.functions import round
 
 df_area = df.withColumn("pickup_area", round(col("pickup_longitude"), 2).cast("string") + "," + round(col("pickup_latitude"), 2).cast("string"))

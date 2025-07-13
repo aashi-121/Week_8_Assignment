@@ -42,7 +42,7 @@ df.printSchema()
 df.show(5)
 
 # -----------------------------------------
-# Step 2: 🧮 Queries
+**Step 2: 🧮 Queries**
 # -----------------------------------------
 
 ✅ Query 1: Add Revenue Column

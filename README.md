@@ -41,8 +41,12 @@ df = spark.read.option("header", "true") \
 df.printSchema()
 df.show(5)
 
+# -----------------------------------------
+# Step 2: 🧮 Queries
+# -----------------------------------------
 
 ✅ Query 1: Add Revenue Column
+
 from pyspark.sql.functions import col
 
 df = df.withColumn("Revenue",
@@ -53,6 +57,7 @@ df = df.withColumn("Revenue",
 df.select("Revenue").show(5)
 
 ✅ Query 2: Total Passengers by Pickup Area (Increasing Count)
+
 from pyspark.sql.functions import round
 
 df_area = df.withColumn("pickup_area", round(col("pickup_longitude"), 2).cast("string") + "," + round(col("pickup_latitude"), 2).cast("string"))
@@ -64,6 +69,7 @@ df_area.groupBy("pickup_area") \
     .show(10)
 
 ✅ Query 3: Average Fare / Total Earnings by Vendor
+
 from pyspark.sql.functions import avg
 
 df.groupBy("VendorID").agg(
@@ -72,6 +78,7 @@ df.groupBy("VendorID").agg(
 ).show()
 
 ✅ Query 4: Moving Count of Payments by Payment Mode
+
 from pyspark.sql.window import Window
 from pyspark.sql.functions import count
 
@@ -84,6 +91,7 @@ df.select("payment_type", "tpep_pickup_datetime", "moving_payment_count").show(1
 
 
 ✅ Query 5: Top 2 Earning Vendors on a Specific Date
+
 from pyspark.sql.functions import to_date, sum
 
 df = df.withColumn("trip_date", to_date("tpep_pickup_datetime"))
@@ -98,6 +106,7 @@ summary.orderBy("total_earning", ascending=False).show(2)
 
 
 ✅ Query 6: Most Passengers Between Route of Two Locations
+
 from pyspark.sql.functions import concat_ws
 
 df = df.withColumn("route", concat_ws("->", col("PULocationID"), col("DOLocationID")))
@@ -109,6 +118,7 @@ df.groupBy("route") \
     .show(1)
 
 ✅ Query 7: Top Pickup Locations with Most Passengers in Last 5/10 Seconds
+
 from pyspark.sql.functions import unix_timestamp, current_timestamp
 
 df = df.withColumn("pickup_unix", unix_timestamp("tpep_pickup_datetime"))
